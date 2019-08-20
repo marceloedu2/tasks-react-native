@@ -15,6 +15,7 @@ import commonStyles from  '../commonStyles';
 import Task from '../components/task';
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import AddTask from './addTasks';
 
 
 export default class diary extends Component {
@@ -35,6 +36,18 @@ export default class diary extends Component {
     ],
     visibleTasks: [],
     showDoneTasks: true,
+    showAddTask: false,
+  }
+
+  addTask = task => {
+    const tasks = [ ...this.state.tasks]
+    tasks.push({
+      id: Math.random(),
+      desc: task.desc,
+      estimateAt: task.date,
+      doneAt: null,
+    })
+    this.setState({tasks, showAddTask: false}, this.filterTasks)
   }
 
   filterTasks = () => {
@@ -67,9 +80,19 @@ export default class diary extends Component {
     this.filterTasks();
   }
 
+  deleteTask = () => {
+    const tasks = this.state.tasks.filter(task => task.id !== id)
+    this.setState({ tasks }, this.filterTasks)
+  }
+
   render() {
     return (
       <View style={styles.container}>
+        <AddTask
+          isVisible={this.state.showAddTask}
+          onSave={this.addTask}
+          onCancel={() => this.setState({ showAddTask: false })}
+        />
         <ImageBackground source={todayImage} style={styles.background}>
           <View style={styles.iconBar}>
             <TouchableOpacity onPress={this.toggleFilter}>
@@ -82,23 +105,19 @@ export default class diary extends Component {
           </View>
           <View style={styles.titleBar}>
             <Text style={styles.title}>Hoje</Text>
-            <Text style={styles.subtitle}>{moment().locale('pt-br').format('ddd, D [de] MMMM')}</Text>
+            <Text style={styles.subtitle}>{moment().locale('pt-br').format('ddd, D [de] MMMM [de] YYYY')}</Text>
           </View>
         </ImageBackground>
         <View style={styles.taksContainer}>
           <FlatList data={this.state.visibleTasks}
             keyExtractor={item => `${item.id}`}
-            renderItem={({item}) => <Task {...item} toggleTask={this.toggleTask} />}
+            renderItem={({item}) => <Task {...item} toggleTask={this.toggleTask} onDelete={this.deleteTask} />}
           />
         </View>
-        <View >
-          <ActionButton style={styles.actionButton}>
-            <ActionButton.Item>
-              <Icon name='md-create' />
-            </ActionButton.Item>
-
-          </ActionButton>
-        </View>
+        <ActionButton
+          buttonColor={commonStyles.colors.today}
+          onPress={ () => {this.setState({showAddTask: true})}}
+        />
       </View>
     )
   }
@@ -135,5 +154,5 @@ const styles = StyleSheet.create({
     marginRight:20,
     flexDirection: 'row',
     justifyContent: 'flex-end',
-  }
+  },
 });
